@@ -1,16 +1,76 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
-import 'package:google_sign_in/google_sign_in.dart';
+import "package:http/http.dart" as http;
 import 'package:google_sign_in_no_firebase/api/google_signin_api.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  MyApp({super.key});
+
+  static const apiUrl = "http://172.20.10.4:8080";
+  Map<String, String> loggedInUser = {};
+
+  Future<void> sendData(String name, String email) async {
+    const url = "$apiUrl/login";
+
+    var response = await http.post(
+      Uri.parse(url),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode(<String, String>{
+        'name': name,
+        'email': email,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      print('Data sent successfully');
+    } else {
+      print('Failed to send data');
+    }
+  }
+
+  Future<void> sendLogout(Map<String, String> user) async {
+    const url = "$apiUrl/logout";
+
+    var response = await http.post(
+      Uri.parse(url),
+      headers: {
+        "Content-Type": "application/json; charset=UTF-8",
+      },
+      body: jsonEncode(<String, String>{
+        'name': user['name'].toString(),
+        'email': user['email'].toString(),
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      print('Data sent successfully');
+    } else {
+      print('Failed to send data');
+    }
+  }
 
   Future signIn() async {
-    await GoogleSigninApi.login();
+    final user = await GoogleSigninApi.login();
+
+    loggedInUser = {
+      "name": user!.displayName.toString(),
+      "email": user.email.toString()
+    };
+
+    sendData(user.displayName.toString(), user.email.toString());
+  }
+
+  Future signOut() async {
+    await GoogleSigninApi.logout();
+
+    sendLogout(loggedInUser);
   }
 
   @override
@@ -22,9 +82,14 @@ class MyApp extends StatelessWidget {
           title: const Text("Flutter google sign in"),
         ),
         body: Center(
-          child: ElevatedButton(
-            onPressed: signIn,
-            child: const Text("Sign in with google"),
+          child: Column(
+            children: [
+              ElevatedButton(
+                onPressed: signIn,
+                child: const Text("Sign in with google"),
+              ),
+              ElevatedButton(onPressed: signOut, child: const Text("Logout"))
+            ],
           ),
         ),
       ),
