@@ -9,12 +9,19 @@ class LoginPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
         appBar: AppBar(
-          title: const Text("Login"),
+          title: const Text("Login Page"),
         ),
         body: Center(
-          child: ElevatedButton(
-            onPressed: () => AuthService.signIn(context, ref),
-            child: const Text("Sign in with google"),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              ElevatedButton(
+                onPressed: () {
+                  AuthService.signIn(context, ref);
+                },
+                child: const Text("Login with google"),
+              )
+            ],
           ),
         ));
   }

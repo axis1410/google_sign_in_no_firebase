@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_sign_in_no_firebase/pages/home_page.dart';
 import 'package:google_sign_in_no_firebase/router/router.dart';
 
 final authStateProvider = StateProvider<bool>(

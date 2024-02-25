@@ -6,22 +6,22 @@ import 'dart:convert';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_sign_in_no_firebase/constantes.dart';
 import 'package:google_sign_in_no_firebase/providers/user_provider.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:google_sign_in_no_firebase/api/google_signin_api.dart';
 import 'package:google_sign_in_no_firebase/models/user_model.dart';
-import 'package:google_sign_in_no_firebase/shared/storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService {
-  static const apiUrl = "http://172.20.10.4:8080";
-  // static const apiUrl = "http://172.20.10.3:8080";
-
-  static const String _isSignedInKey = "_isSIgnedIn";
+  static const String access_token = "";
+  static const String _isLoggedInKey = 'isLoggedIn';
 
   static const loginUrl = "$apiUrl/login";
   static const logoutUrl = "$apiUrl/logout";
+
+  static String get isLoggedInKey => _isLoggedInKey;
 
   static Future<void> signIn(BuildContext context, WidgetRef ref) async {
     final googleUser = await GoogleSigninApi.login();
@@ -47,18 +47,15 @@ class AuthService {
       userNotifier.updateUserAccessToken(userData["access_token"]);
       userNotifier.updateUserRefreshToken(userData["refresh_token"]);
 
-      await storage.write(
-        key: "access_token",
-        value: userData["access_token"],
-      );
-      await storage.write(
-        key: "refresh_token",
-        value: userData["refresh_token"],
-      );
-
       SharedPreferences prefs = await SharedPreferences.getInstance();
 
-      await prefs.setBool(_isSignedInKey, true);
+      await prefs.setString(access_token, userData["access_token"]);
+      print("access token: ${userData["access_token"]}");
+      print("Added token to prefs");
+      print(prefs.getString(access_token));
+      await prefs.setBool(_isLoggedInKey, true);
+
+      await prefs.setString("user_name", userData['user']["name"]);
 
       context.go("/home");
     } else {
@@ -99,7 +96,10 @@ class AuthService {
       ));
 
       SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.setBool(_isSignedInKey, false);
+
+      await prefs.remove("access_token");
+      await prefs.setBool(_isLoggedInKey, false);
+      await prefs.remove("user_name");
 
       context.go("/login");
     } else {
@@ -111,7 +111,8 @@ class AuthService {
   static Future<bool> isLoggedIn() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
-    return prefs.getBool(_isSignedInKey) ?? false;
+    // return prefs.getBool(_isSignedInKey) ?? false;
+    return prefs.getBool(_isLoggedInKey) ?? false;
   }
 
   static Future<String> getNewAccessToken(
@@ -142,7 +143,14 @@ class AuthService {
       // print(response.body);
       final userData = json.decode(response.body);
       final userNotifier = ref.read(userProvider.notifier);
+
       userNotifier.updateUserAccessToken(userData["access_token"]);
+
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+
+      await prefs.setString("access_token", userData["access_token"]);
+      await prefs.setBool(_isLoggedInKey, true);
+
       return userData["access_token"];
     } else {
       print("failed to get token ${response.statusCode}");
