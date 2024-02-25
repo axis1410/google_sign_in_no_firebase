@@ -6,7 +6,7 @@ import 'dart:convert';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_sign_in_no_firebase/constantes.dart';
+import 'package:google_sign_in_no_firebase/constants.dart';
 import 'package:google_sign_in_no_firebase/providers/user_provider.dart';
 import 'package:http/http.dart' as http;
 
@@ -47,17 +47,16 @@ class AuthService {
       userNotifier.updateUserAccessToken(userData["access_token"]);
       userNotifier.updateUserRefreshToken(userData["refresh_token"]);
 
+      print(ref.read(userProvider).accessToken);
+      print(ref.read(userProvider).email);
+      print(ref.read(userProvider).name);
+
       SharedPreferences prefs = await SharedPreferences.getInstance();
 
       await prefs.setString(access_token, userData["access_token"]);
-      print("access token: ${userData["access_token"]}");
-      print("Added token to prefs");
-      print(prefs.getString(access_token));
       await prefs.setBool(_isLoggedInKey, true);
 
-      await prefs.setString("user_name", userData['user']["name"]);
-
-      context.go("/home");
+      context.go("/landing");
     } else {
       print("Failed to login");
       print(response.statusCode);
@@ -78,11 +77,7 @@ class AuthService {
         "Content-Type": "application/json; charset=UTF-8",
         "Authorization": "Bearer $accessToken"
       },
-      // TODO: Change logout functionality to use the accesstoken and not the body
-      body: jsonEncode(<String, String>{
-        'name': ref.watch(userProvider).name.toString(),
-        'email': ref.watch(userProvider).email.toString(),
-      }),
+      body: jsonEncode({}),
     );
 
     if (response.statusCode == 200) {
@@ -97,7 +92,7 @@ class AuthService {
 
       SharedPreferences prefs = await SharedPreferences.getInstance();
 
-      await prefs.remove("access_token");
+      await prefs.remove(accessToken);
       await prefs.setBool(_isLoggedInKey, false);
       await prefs.remove("user_name");
 
@@ -121,11 +116,6 @@ class AuthService {
     String refreshToken,
   ) async {
     const url = "$apiUrl/token";
-
-    Map<String, String> tokens = {
-      "accessToken": accessToken.toString(),
-      "refreshToken": refreshToken.toString()
-    };
 
     var response = await http.post(
       Uri.parse(url),

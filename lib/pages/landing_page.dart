@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_sign_in_no_firebase/main.dart';
 import 'package:google_sign_in_no_firebase/providers/user_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_sign_in_no_firebase/services/auth_service.dart'; // Import your AuthService
@@ -26,8 +27,6 @@ class _LandingPageState extends ConsumerState<LandingPage> {
   void getPrefsData(WidgetRef ref) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
-    print(prefs.getString(AuthService.access_token));
-
     setState(() {
       _accessToken = prefs.getString(AuthService.access_token) ?? "";
       _isLoggedIn = prefs.getBool(AuthService.isLoggedInKey) ?? false;
@@ -35,7 +34,7 @@ class _LandingPageState extends ConsumerState<LandingPage> {
 
     ref.read(userProvider.notifier).updateUserAccessToken(_accessToken);
 
-    print("Token from userProvider");
+    print("Token from landing page");
     print(ref.watch(userProvider.select((value) => value.accessToken)));
   }
 
@@ -53,15 +52,15 @@ class _LandingPageState extends ConsumerState<LandingPage> {
               onPressed: () {
                 if (_isLoggedIn) {
                   context.go(Uri(
-                          path: "/home",
-                          queryParameters: {"accessToken": _accessToken})
-                      .toString());
+                    path: "/home",
+                    queryParameters: {"accessToken": _accessToken},
+                  ).toString());
                 } else {
-                  context.go("/login");
+                  AuthService.signIn(context, ref);
                 }
               },
               child: Text(
-                (_isLoggedIn == true) ? "Go to Home" : "Go to login page",
+                (_isLoggedIn == true) ? "Go to Home" : "Login with Google",
               ),
             ),
           ],

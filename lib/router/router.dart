@@ -2,9 +2,10 @@ import 'package:go_router/go_router.dart';
 import 'package:google_sign_in_no_firebase/pages/home_page.dart';
 import 'package:google_sign_in_no_firebase/pages/landing_page.dart';
 import 'package:google_sign_in_no_firebase/pages/login_page.dart';
+import 'package:google_sign_in_no_firebase/pages/test_page.dart';
 
 final router = GoRouter(
-  initialLocation: "/landing",
+  initialLocation: "/login",
   routes: [
     GoRoute(
       path: "/login",
@@ -22,5 +23,9 @@ final router = GoRouter(
       path: "/landing",
       builder: (context, state) => const LandingPage(),
     ),
+    GoRoute(
+      path: "/test",
+      builder: (context, state) => const TestPage(),
+    )
   ],
 );
